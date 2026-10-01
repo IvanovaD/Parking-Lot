@@ -28,7 +28,19 @@ docker compose up --build
 
 To override them, copy `.env.example` to `.env` and set your own values before starting Compose.
 
-The service is available at `http://localhost:8080`. PostgreSQL is reachable only by the application on the private Compose network, and its data is retained in the `parking-postgres-data` Docker volume.
+The service is available at `http://localhost:8080`. PostgreSQL is exposed on host port `5433` for local database tools, while the application connects through the private Compose network. Its data is retained in the `parking-postgres-data` Docker volume.
+
+To inspect the database with IntelliJ, DBeaver, or pgAdmin, create a PostgreSQL connection with:
+
+```text
+Host: localhost
+Port: 5433
+Database: parking
+User: parking
+Password: parking
+```
+
+If values are overridden in `.env`, use those credentials and `POSTGRES_HOST_PORT` instead.
 
 Useful endpoints:
 
@@ -202,6 +214,7 @@ Docker must be running for `verify`. Integration tests use PostgreSQL 18, run th
 | `DB_POOL_MIN_IDLE` | `2` | Minimum idle connections |
 | `DB_CONNECTION_TIMEOUT_MS` | `3000` | Pool connection timeout |
 | `DB_QUERY_TIMEOUT_MS` | `5000` | Hibernate query timeout |
+| `POSTGRES_HOST_PORT` | `5433` | PostgreSQL host port used by local GUI tools |
 | `SERVER_PORT` | `8080` | HTTP port |
 | `SHUTDOWN_TIMEOUT` | `20s` | Graceful shutdown window in the `prod` profile |
 

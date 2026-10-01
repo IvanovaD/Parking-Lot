@@ -5,6 +5,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-parking}
       POSTGRES_USER: ${POSTGRES_USER:-parking}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-parking}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
     volumes:
       - parking-postgres-data:/var/lib/postgresql
     healthcheck:

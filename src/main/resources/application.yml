@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: parking-lot
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/parking}
+    username: ${DB_USERNAME:parking}
+    password: ${DB_PASSWORD:parking}
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX_SIZE:20}
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:3000}
+      validation-timeout: 1000
+  flyway:
+    enabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        query:
+          timeout: ${DB_QUERY_TIMEOUT_MS:5000}
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  tomcat:
+    connection-timeout: ${HTTP_CONNECTION_TIMEOUT:5s}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  pattern:
+    level: "%5p [correlationId:%X{correlationId:-}]"
+
+info:
+  app:
+    name: ${spring.application.name}
+    description: Parking lot reservation API

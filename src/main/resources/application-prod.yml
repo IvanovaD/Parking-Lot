@@ -1,0 +1,8 @@
+logging:
+  structured:
+    format:
+      console: ecs
+
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: ${SHUTDOWN_TIMEOUT:20s}

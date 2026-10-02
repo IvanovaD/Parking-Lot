@@ -203,6 +203,41 @@ Run the complete suite, including PostgreSQL Testcontainers integration and conc
 
 Docker must be running for `verify`. Integration tests use PostgreSQL 18, run the real Flyway migrations, verify database constraints and HTTP behavior, and submit 81 concurrent requests to prove the 80-reservation limit.
 
+### Manual test checklist
+
+Use Swagger UI at `http://localhost:8080/swagger-ui.html` and provide a unique UUID in the `Idempotency-Key` header for each new request. Use future timestamps with an explicit UTC offset.
+
+| Scenario | Expected result |
+|---|---|
+| Create without `parkingSpaceNumber` | `201`; the lowest available space is assigned |
+| Create with an available space from 1 to 100 | `201`; the requested space is assigned |
+| Get the returned reservation ID | `200`; the stored reservation is returned |
+| Request an overlapping reservation for the same space | `409`; another space is not substituted |
+| Reserve the same space at the previous reservation's exact end time | `201`; adjacent intervals are allowed |
+| Cancel an active reservation | `204`; its status becomes `CANCELLED` |
+| Cancel the same reservation again | `204`; cancellation is idempotent |
+| Reserve a cancelled reservation's space and interval | `201`; cancellation releases capacity |
+| Retry the identical payload with the same idempotency key | The original reservation is returned |
+| Reuse an idempotency key with a different payload | `409` |
+| Omit the idempotency key or required fields | `400` Problem Detail response |
+| Use a past time, offset-less time, or space outside 1–100 | `400` Problem Detail response |
+| Get or cancel an unknown UUID | `404` Problem Detail response |
+
+To exercise the utilization limit, submit 81 automatic reservations for the same future start time:
+
+```bash
+for i in $(seq 1 81); do
+  code=$(curl -s -o "/tmp/parking-response-$i.json" -w "%{http_code}" \
+    -X POST http://localhost:8080/api/v1/reservations \
+    -H 'Content-Type: application/json' \
+    -H "Idempotency-Key: $(uuidgen)" \
+    -d "{\"licensePlate\":\"CAP$i\",\"startTime\":\"2030-07-01T10:00:00Z\"}")
+  echo "Request $i: HTTP $code"
+done
+```
+
+The first 80 requests should return `201`; request 81 should return `409` with the capacity-limit error code. Choose a start time not already used by earlier manual tests, or reset the local data first.
+
 ## Configuration
 
 | Environment variable | Default | Purpose |
